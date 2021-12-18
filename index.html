@@ -1,0 +1,136 @@
+<html>  
+<head>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.3/js/tabulator.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.3/css/tabulator.min.css"></link>
+
+  <script type = "text/javascript">
+    function setTable(data){
+    $("#table").tabulator({
+        layout: "fitDataFill",
+        height: "311px",
+        columns: [
+        {
+            title: "Id",
+            field: "ID"
+        },
+        {
+            title: "Date",
+            field: "dato"
+        },
+        {
+            title: "Time",
+            field: "klokkeslaet"
+        },
+        {
+            title: "Place",
+            field: "sted.PlaceName"
+        },
+        {
+            title: "Place latitude",
+            field: "sted.PlaceLat"
+        },
+        {   
+            title: "Place longitude",
+            field: "sted.PlaceLon"
+        },
+        {
+            title: "Temperature",
+            field: "temperatur"
+        },
+        {
+            title: "Humidity",
+            field: "luftfugtighed"
+        }
+        ],
+    });
+    $("#table").tabulator("setData", data);
+    }
+    
+    function deleteData() {
+        //axios.delete('http://localhost:8080/', document.getElementById("id").value);
+        // Send a DELETE request
+        axios({
+        method: 'delete',
+        url: 'http://localhost:8080/',
+        data: {
+            delete: document.getElementById("id_delete").value
+        }
+        });
+    }
+    
+    function getData() {
+    //Example of getting data from a restendpoint... response contains data  
+    axios.get('http://localhost:8080/')
+            .then(response => {
+        setTable(response.data);
+            }).catch(error => alert('Try again'));
+    }
+
+    function sendData() {
+    axios.post('http://localhost:8080',
+           {
+                "ID": (document.getElementById("id").value),
+                "dato": (document.getElementById("date").value),
+                "klokkeslaet": (document.getElementById("time").value),
+                "sted": {
+                    "PlaceName": document.getElementById("placename").value,
+                    "PlaceLat": (document.getElementById("placelat").value),
+                    "PlaceLon": (document.getElementById("placelong").value)
+                },
+                "temperatur": (document.getElementById("temperature").value),
+                "luftfugtighed": (document.getElementById("humidity").value)
+           }
+           )
+            .then(response => {
+                //socket.send("New element ID: " + (document.getElementById("id").value));
+
+            }).catch(error => alert('Try again'));
+    }          
+  </script>  
+</head>  
+<body>  
+<p>Action:</p> <p id="Action"></p>
+
+  <p>Get weather data</p>  
+  <input type = "button" onclick = "getData()" value = "Hent data">
+  <p>Send data</p>
+  <p>Id<input id="id" type="number"></p>
+  <p>Date<input id="date" type="number"></p>
+  <p>Time<input id="time" type="number"></p>
+  <p>Placename<input id="placename" type="text"> Latitude <input id="placelat" type="number">  Longitude <input id="placelong" type="number"></p>
+  <p>Temperature<input id="temperature" type="number"></p>
+  <p>Humidity<input id="humidity" type="number"></p>
+  <input type = "button" onclick = "sendData()" value = "Send Data">
+  <p>Delete a weather registration by its ID<input id="id_delete" type="number"></p>
+  <input type = "button" onclick = "deleteData()" value = "Delete ID">
+  <div id="table">
+  
+</body>  
+</html>
+
+
+
+<html>
+<header>
+    <link rel="stylesheet" href="resource://content-accessible/plaintext.css">
+</header>
+
+<script>
+
+
+const socket = new WebSocket ('ws://localhost:8080/live');
+
+socket.addEventListener('message',function(message) {
+    console.log('Message from server: ', message.data);
+    var obj = JSON.parse(message.data);
+    document.getElementById("Action").innerText = obj.action;
+    getData();
+});
+
+</script>
+
+
+</html>
